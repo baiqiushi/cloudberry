@@ -56,12 +56,19 @@ angular.module("cloudberry.map")
 
     // Send query to cloudberry
     function sendPinmapQuery() {
+      var keyword = cloudberry.parameters.keywords[0];
+      console.log("search keyword = " + keyword);
+      var count = cloudberry.parameters.wordcount[keyword];
+      console.log("count of keywrod = " + count);
+      var k_value = Math.round(count * cloudberry.parameters.kp / 100);
+      console.log("k value = " + k_value);
+
       var pinsJson = {
         dataset: cloudberry.parameters.dataset,
         filter: queryUtil.getFilter(cloudberry.parameters, queryUtil.defaultPinmapSamplingDayRange, cloudberry.parameters.geoIds),
         select: {
           order: ["-create_at"],
-          limit: queryUtil.defaultPinmapLimit,
+          limit: k_value, //queryUtil.defaultPinmapLimit,
           offset: 0,
           field: ["id", "coordinate", "place.bounding_box", "create_at", "user.id"]
         },
@@ -69,6 +76,9 @@ angular.module("cloudberry.map")
           sliceMillis: cloudberryConfig.querySliceMills
         }
       };
+
+      console.log("Query = ");
+      console.log(pinsJson);
 
       var pinsTimeJson = queryUtil.getTimeBarRequest(cloudberry.parameters);
 

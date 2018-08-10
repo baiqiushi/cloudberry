@@ -442,6 +442,22 @@ angular.module('cloudberry.map', ['leaflet-directive', 'cloudberry.common','clou
       }
     });
 
+
+    // Load the word count from AsterixDB limitdb
+    $http.post("http://localhost:19002/query/service", {statement:"select * from limitdb.wordcount where count > 5000;"})
+      .success(function (data) {
+        var results = data["results"];
+        console.log(results);
+        cloudberry.parameters.wordcount = results.reduce(function(map, obj) {
+          map[obj["wordcount"]["word"]] = obj["wordcount"]["count"];
+          return map;
+        }, {});
+        console.log(cloudberry.parameters.wordcount);
+      })
+      .error(function (data) {
+        console.error("Load word count failed!");
+      });
+
   })
   .directive("map", function () {
     return {

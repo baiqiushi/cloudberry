@@ -3,6 +3,7 @@ angular.module('cloudberry.util', ['cloudberry.common'])
       var stopwordsMap = buildStopwordsMap();
 
       $scope.search = function() {
+          cloudberry.parameters.kp = $scope.kp;
           if ($scope.keyword && $scope.keyword.trim().length > 0) {
               //Splits out all individual words in the query keyword.
               var keywords = $scope.keyword.trim().split(/\s+/);
@@ -68,6 +69,7 @@ angular.module('cloudberry.util', ['cloudberry.common'])
               '<span class="input-group-btn">',
                 '<button type="submit" class="btn btn-primary" id="submit-button">Submit</button>',
               '</span>',
+              '<input type="number" name="k_percentage" id="kp" ng-model="kp" value="70" step="10"/>',
             '</div>',
           '</form>'
         ].join('')
