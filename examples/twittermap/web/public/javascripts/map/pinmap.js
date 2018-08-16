@@ -169,7 +169,7 @@ angular.module("cloudberry.map")
         //   lineColor: "#00aced"//"#00aced"
         // });
         $scope.pointsLayer = new WebGLPointLayer();
-        $scope.pointsLayer.setPointSize(4.5);
+        $scope.pointsLayer.setPointSize(2);
 
         $scope.map.addLayer($scope.pointsLayer);
 
@@ -384,6 +384,7 @@ angular.module("cloudberry.map")
 
       //Update the points data
       if (result.length > 0){
+        console.log("Pinmap result size = " + result.length);
         $scope.points = [];
         $scope.pointIDs = [];
         for (var i = 0; i < result.length; i++) {
