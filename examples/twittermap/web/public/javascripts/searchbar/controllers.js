@@ -2,6 +2,8 @@ angular.module('cloudberry.util', ['cloudberry.common'])
   .controller('SearchCtrl', function($scope, $window, cloudberry, cloudberryConfig, moduleManager) {
       var stopwordsMap = buildStopwordsMap();
 
+      $scope.kp = 70;
+
       $scope.search = function() {
           cloudberry.parameters.kp = $scope.kp;
           if ($scope.keyword && $scope.keyword.trim().length > 0) {
