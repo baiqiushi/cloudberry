@@ -303,7 +303,13 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         gl.vertexAttrib1f(this._programs[0].aPointSize, 10.0);
         gl.uniformMatrix4fv(this._programs[0].matLoc, false, mapMatrix);
 
-        gl.uniform3f(this._programs[0].colorLoc, 0.2, 0.2, 1.0);
+        //gl.uniform3f(this._programs[0].colorLoc, 0.2, 0.2, 1.0);
+        // Dark gray
+        //gl.uniform3f(this._programs[0].colorLoc, 0.1, 0.1, 0.1);
+        // Dark Blue
+        //gl.uniform3f(this._programs[0].colorLoc, 0, 0.3, 0.5);
+        // Bright Blue
+        gl.uniform3f(this._programs[0].colorLoc, 0, 0.3, 1);
         gl.uniform1f(this._programs[0].selectedLoc, this._cid);
         gl.uniform1f(this._programs[0].pointSize, pointSize);
 

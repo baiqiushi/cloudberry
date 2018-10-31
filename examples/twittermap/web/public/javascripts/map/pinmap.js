@@ -169,7 +169,7 @@ angular.module("cloudberry.map")
         //   lineColor: "#00aced"//"#00aced"
         // });
         $scope.pointsLayer = new WebGLPointLayer();
-        $scope.pointsLayer.setPointSize(2);
+        $scope.pointsLayer.setPointSize(3);
 
         $scope.map.addLayer($scope.pointsLayer);
 
