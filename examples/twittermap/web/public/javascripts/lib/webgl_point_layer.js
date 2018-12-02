@@ -11,6 +11,7 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         this._pointColorX = 29 / 255.0;
         this._pointColorY = 161 / 255.0;
         this._pointColorZ = 242 / 255.0;
+        this._data = [];
     },
 
 
@@ -275,7 +276,7 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         var pointSize = Math.max(map.getZoom() - 4.0, this._pointSize);
         //var pointSize = 20;
         // var pointSize = Math.max(map.getZoom() - 4.0, 1.0);
-        console.log("map.getZoom() = " + map.getZoom() + ", pointSize = " + pointSize);
+        //console.log("map.getZoom() = " + map.getZoom() + ", pointSize = " + pointSize);
         mapMatrix.set(pixelsToWebGLMatrix);
         var bounds = map.getBounds();
         var topLeft = new L.LatLng(bounds.getNorth(), bounds.getWest());
@@ -320,7 +321,7 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         gl.vertexAttrib1f(this._programs[0].aPointSize, 10.0);
         gl.uniformMatrix4fv(this._programs[0].matLoc, false, mapMatrix);
 
-        console.log("pointColor = [" + this._pointColorX + "," + this._pointColorY + "," + this._pointColorZ + "]");
+        //console.log("pointColor = [" + this._pointColorX + "," + this._pointColorY + "," + this._pointColorZ + "]");
         gl.uniform3f(this._programs[0].colorLoc,
           this._pointColorX,
           this._pointColorY,

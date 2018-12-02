@@ -74,6 +74,11 @@ angular.module("cloudberry.common")
 
         var request = JSON.stringify(query);
 
+        if (category === "pinMapResult") {
+          console.log("[cloudberryClient]-->sending query:");
+          console.log(request);
+        }
+
         ws.send(request);
 
         return true;

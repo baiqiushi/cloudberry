@@ -55,7 +55,7 @@ angular.module("cloudberry.map")
     }
 
     // Send query to cloudberry
-    function sendPinmapQuery() {
+    /*function sendPinmapQuery() {
 
       if (typeof(cloudberry.parameters.keywords) === "undefined"
         || cloudberry.parameters.keywords === null
@@ -118,7 +118,86 @@ angular.module("cloudberry.map")
           }
         }, "pinTime");
       }
+    }*/
+
+    // Send query to cloudberry with query slicing myself
+    function sendPinmapQuery() {
+      if (typeof(cloudberry.parameters.keywords) === "undefined"
+        || cloudberry.parameters.keywords === null
+        || cloudberry.parameters.keywords.length === 0) {
+        return;
+      }
+
+      $scope.pinsJsonOffset = 0;
+      if ($scope.pointsLayer) {
+        $scope.pointsLayer.setData([]);
+      }
+      // Init the tweet count number to be zero
+      moduleManager.publishEvent(moduleManager.EVENT.CHANGE_TWEET_COUNT, {delta: -1});
+
+      $scope.pinsJson = {
+        dataset: cloudberry.parameters.dataset,
+        filter: queryUtil.getFilter(cloudberry.parameters, queryUtil.defaultPinmapSamplingDayRange, cloudberry.parameters.geoIds),
+        select: {
+          order: ["-create_at"],
+          limit: queryUtil.defaultPinmapLimit,
+          offset: $scope.pinsJsonOffset,
+          field: ["id", "coordinate", "place.bounding_box", "create_at", "user.id"]
+        }
+      };
+
+      function pinsJsonCallback(id, resultSet, resultTimeInterval) {
+        if(angular.isArray(resultSet)) {
+          cloudberry.pinmapMapResult = resultSet[0];
+          console.log("[pinmap]-->receive: # of points:" + cloudberry.pinmapMapResult.length);
+          moduleManager.publishEvent(moduleManager.EVENT.CHANGE_TWEET_COUNT, {delta: cloudberry.pinmapMapResult.length});
+          //send next query
+          if (cloudberry.pinmapMapResult.length > 0) {
+            $scope.pinsJsonOffset = $scope.pinsJsonOffset + queryUtil.defaultPinmapLimit;
+            $scope.pinsJson.select.offset = $scope.pinsJsonOffset;
+            cloudberryClient.send($scope.pinsJson, pinsJsonCallback, "pinMapResult");
+          }
+        }
+      }
+
+      cloudberryClient.send($scope.pinsJson, pinsJsonCallback, "pinMapResult");
+
+      // For time-series histogram, get geoIds not in the time series cache.
+      $scope.geoIdsNotInTimeSeriesCache = TimeSeriesCache.getGeoIdsNotInCache(cloudberry.parameters.keywords,
+        cloudberry.parameters.timeInterval, cloudberry.parameters.geoIds, cloudberry.parameters.geoLevel);
+
+      var pinsTimeJson = queryUtil.getTimeBarRequest(cloudberry.parameters, $scope.geoIdsNotInTimeSeriesCache);
+
+      // Complete time series cache hit case - exclude time series request
+      if($scope.geoIdsNotInTimeSeriesCache.length === 0) {
+        cloudberry.commonTimeSeriesResult = TimeSeriesCache.getTimeSeriesValues(cloudberry.parameters.geoIds, cloudberry.parameters.geoLevel, cloudberry.parameters.timeInterval);
+      }
+      // Partial time series cache hit case
+      else {
+        cloudberryClient.send(pinsTimeJson, function(id, resultSet, resultTimeInterval){
+          if(angular.isArray(resultSet)) {
+            var requestTimeRange = {
+              start: new Date(resultTimeInterval.start),
+              end: new Date(resultTimeInterval.end)
+            };
+            // Since the middleware returns the query result in multiple steps,
+            // cloudberry.timeSeriesQueryResult stores the current intermediate result.
+            cloudberry.timeSeriesQueryResult = resultSet[0];
+            // Avoid memory leak.
+            resultSet[0] = [];
+            cloudberry.commonTimeSeriesResult = TimeSeriesCache.getValuesFromResult(cloudberry.timeSeriesQueryResult).concat(
+              TimeSeriesCache.getTimeSeriesValues(cloudberry.parameters.geoIds, cloudberry.parameters.geoLevel, requestTimeRange));
+          }
+          // When the query is executed completely, we update the time series cache.
+          if((cloudberryConfig.querySliceMills > 0 && !angular.isArray(resultSet) &&
+            resultSet["key"] === "done") || cloudberryConfig.querySliceMills <= 0) {
+            TimeSeriesCache.putTimeSeriesValues($scope.geoIdsNotInTimeSeriesCache,
+              cloudberry.timeSeriesQueryResult, cloudberry.parameters.timeInterval);
+          }
+        }, "pinTime");
+      }
     }
+
 
     // Event handler for zoom event
     function onZoomPinmap(event) {
@@ -192,7 +271,7 @@ angular.module("cloudberry.map")
         $scope.map.addLayer($scope.pointsLayer);
 
         //Create a new event called "mouseintent" by listening to "mousemove".
-        $scope.map.on("mousemove", onMapMouseMove);
+        //$scope.map.on("mousemove", onMapMouseMove);
         var timer = null;
         //If user hang the mouse cursor for 300ms, fire a "mouseintent" event.
         function onMapMouseMove(e) {
@@ -359,12 +438,13 @@ angular.module("cloudberry.map")
             $scope.points.push([$scope.rangeRandom(result[i].id, result[i]["place.bounding_box"][0][1], result[i]["place.bounding_box"][1][1]), $scope.rangeRandom(result[i].id + 79, result[i]["place.bounding_box"][0][0], result[i]["place.bounding_box"][1][0]), result[i].id]); // 79 is a magic number to avoid using the same seed for generating both the longitude and latitude.
           }
         }
-        $scope.pointsLayer.setData($scope.points);
+        //$scope.pointsLayer.setData($scope.points);
+        $scope.pointsLayer.appendData($scope.points);
       }
-      else {
+      /*else {
         $scope.points = [];
         $scope.pointsLayer.setData($scope.points);
-      }
+      }*/
     }
     
     // initialize if the default map type is pinmap

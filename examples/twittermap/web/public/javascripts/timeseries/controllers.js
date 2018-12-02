@@ -1,5 +1,5 @@
 angular.module('cloudberry.timeseries', ['cloudberry.common'])
-  .controller('TimeSeriesCtrl', function ($scope, $window, $compile, cloudberry) {
+  .controller('TimeSeriesCtrl', function ($scope, $window, $compile, cloudberry, moduleManager) {
     $scope.ndx = null;
     $scope.result = {};
     $scope.resultArray = [];
@@ -17,19 +17,30 @@ angular.module('cloudberry.timeseries', ['cloudberry.common'])
     $scope.preProcess = function (result) {
       // TODO make the pattern can be changed by the returned result parameters
       var result_array = [];
-      $scope.currentTweetCount = 0;
+      //$scope.currentTweetCount = 0;
       if (result && result[0]) {
         var granu = Object.keys(result[0])[0];
         angular.forEach(result, function (value, key) {
           key = new Date(value[granu]);
           value = +value.count;
-          $scope.currentTweetCount += value;
+          //$scope.currentTweetCount += value;
           result_array.push({'time': key, 'count': value});
         });
 
       }
       return result_array;
     };
+
+    // Update currentTweetCount based on pinmap result number
+    moduleManager.subscribeEvent(moduleManager.EVENT.CHANGE_TWEET_COUNT, function(event) {
+      var delta = event.delta;
+      if (delta === -1) {
+        $scope.currentTweetCount = 0;
+      }
+      else {
+        $scope.currentTweetCount = $scope.currentTweetCount + delta;
+      }
+    });
 
     // add information about the count of tweets
     var countDiv = document.createElement("div");
