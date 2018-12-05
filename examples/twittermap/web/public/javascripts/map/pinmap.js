@@ -148,18 +148,27 @@ angular.module("cloudberry.map")
 
       function pinsJsonCallback(id, resultSet, resultTimeInterval) {
         if(angular.isArray(resultSet)) {
+          var fetchingTime = performance.now() - $scope.timerStart;
+          $scope.fetchingTimes.totalTime = $scope.fetchingTimes.totalTime + fetchingTime;
+          $scope.fetchingTimes.totalCount = $scope.fetchingTimes.totalCount + 1;
+          $scope.fetchingTimes.averageTime = $scope.fetchingTimes.totalTime / $scope.fetchingTimes.totalCount;
           cloudberry.pinmapMapResult = resultSet[0];
           console.log("[pinmap]-->receive: # of points:" + cloudberry.pinmapMapResult.length);
+          console.log("---> [pinmap] timing <---");
+          console.log($scope.fetchingTimes);
           moduleManager.publishEvent(moduleManager.EVENT.CHANGE_TWEET_COUNT, {delta: cloudberry.pinmapMapResult.length});
           //send next query
           if (cloudberry.pinmapMapResult.length > 0) {
             $scope.pinsJsonOffset = $scope.pinsJsonOffset + queryUtil.defaultPinmapLimit;
             $scope.pinsJson.select.offset = $scope.pinsJsonOffset;
+            $scope.timerStart = performance.now();
             cloudberryClient.send($scope.pinsJson, pinsJsonCallback, "pinMapResult");
           }
         }
       }
 
+      $scope.fetchingTimes = {totalTime: 0.0, totalCount: 0, averageTime: 0.0};
+      $scope.timerStart = performance.now();
       cloudberryClient.send($scope.pinsJson, pinsJsonCallback, "pinMapResult");
 
       // For time-series histogram, get geoIds not in the time series cache.

@@ -1,5 +1,9 @@
 var WebGLPointLayer = L.CanvasLayer.extend({
 
+    // For time measurement
+    _times: {id:0.0, convert:0.0, bindBuffer:0.0, render:0.0, count:0, id_avg:0.0, convert_avg:0.0, bindBuffer_avg:0.0,
+      render_avg:0.0, phase1:0.0, phase2:0.0, phase1_avg:0.0, phase2_avg:0.0},
+
     initialize: function(options) {
         // Call initialize() from the parent class
         L.CanvasLayer.prototype.initialize.call(this, options);
@@ -183,6 +187,7 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         var gl = this._gl;
         if ( gl == null || this._data == null ) return;
 
+        var t0 = performance.now();
         var verts = [];
         // ??? Why not id = 0; id < this._data.length
         for ( var id = 1; id <= this._data.length; ++id ) {
@@ -197,12 +202,17 @@ var WebGLPointLayer = L.CanvasLayer.extend({
 
             verts.push(pixel.x, pixel.y, r, g, b);
         }
+        var t1 = performance.now();
 
         this._vertArray = new Float32Array(verts);
+        var t2 = performance.now();
         var fsize = this._vertArray.BYTES_PER_ELEMENT;
 
+        var t3 = performance.now();
         gl.bindBuffer(gl.ARRAY_BUFFER, this._vertBuffer);
+
         gl.bufferData(gl.ARRAY_BUFFER, this._vertArray, gl.STATIC_DRAW);
+        var t4 = performance.now();
 
         gl.useProgram(this._programs[0]);
         gl.vertexAttribPointer(this._programs[0].vertLoc, 2, gl.FLOAT, false, fsize*5, 0);
@@ -216,7 +226,26 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         gl.vertexAttribPointer(this._programs[1].indexLoc, 3, gl.FLOAT, false, fsize*5, fsize*2);
         gl.enableVertexAttribArray(this._programs[1].indexLoc);
 
+        var t5 = performance.now();
         this.render();
+        var t6 = performance.now();
+
+        this._times.id = this._times.id + t1 - t0;
+        this._times.convert = this._times.convert + t2 - t1;
+        this._times.bindBuffer = this._times.bindBuffer + t4 - t3;
+        this._times.render = this._times.render + t6 - t5;
+        this._times.count = this._times.count + 1;
+        this._times.id_avg = this._times.id / this._times.count;
+        this._times.convert_avg = this._times.convert / this._times.count;
+        this._times.bindBuffer_avg = this._times.bindBuffer / this._times.count;
+        this._times.render_avg = this._times.render / this._times.count;
+        console.log("===> [webgl] timing <===");
+        console.log("id:", t1 - t0);
+        console.log("convert:", t2 - t1);
+        console.log("bindBuffer:", t4 - t3);
+        console.log("render:", t6 - t5);
+        console.log("count:", this._times.count);
+        console.log(this._times);
     },
 
 
@@ -303,8 +332,13 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         gl.uniform1f(this._programs[1].pointSize, 1.2*pointSize);
         //gl.uniform1f(this._programs[1].pointSize, 12*pointSize);
 
+        var t0 = performance.now();
         if ( this._data )
             gl.drawArrays(gl.POINTS, 0, this._data.length);
+        var t1 = performance.now();
+        this._times.phase1 = this._times.phase1 + t1 - t0;
+        this._times.phase1_avg = this._times.phase1 / this._times.count;
+        console.log("phase1:", t1 - t0);
 
         // Pass 2
         // Compute the cursor location to pinned points/tweets map
@@ -329,8 +363,13 @@ var WebGLPointLayer = L.CanvasLayer.extend({
         gl.uniform1f(this._programs[0].selectedLoc, this._cid);
         gl.uniform1f(this._programs[0].pointSize, pointSize);
 
+        var t3 = performance.now();
         if ( this._data )
             gl.drawArrays(gl.POINTS, 0, this._data.length);
+        var t4 = performance.now();
+        this._times.phase2 = this._times.phase2 + t4 - t3;
+        this._times.phase2_avg = this._times.phase2 / this._times.count;
+        console.log("phase2:", t4 - t3);
     },
 
 
